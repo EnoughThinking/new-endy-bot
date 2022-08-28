@@ -99,5 +99,5 @@ class FirstMeetingCommand {
 const state = new BotState<FirstMeetingCommand>();
 const controls = new BotControls();
 const command = new FirstMeetingCommand(state, controls);
-const botCommandRunner = new BotCommandRunner(state, command, controls);
+const botCommandRunner = new BotCommandRunner(command, controls);
 botCommandRunner.run();

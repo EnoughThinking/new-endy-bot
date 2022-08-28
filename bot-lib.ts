@@ -13,7 +13,7 @@ export const BOT_RESULT_OK = 'OK';
 export const BOT_RESULT_BACK = '..';
 export const BOT_RESULT_NEXT = 'NEXT';
 
-export function getCommandNames<T>(command: T) {
+export function getCommandNames<T>(command: any) {
   return Object.getOwnPropertyNames(command.constructor.prototype).filter(
     (m) => m !== 'constructor'
   );
@@ -60,11 +60,6 @@ export enum BotControlsType {
   'Alert' = 'Alert',
 }
 
-export interface BotControlProvider {
-  isAlert(botMethodResponse: BotMethodResponse): boolean;
-  createAlert(): BotMethodResponse['controls'];
-}
-
 export class BotControls {
   async isAlert(botMethodResponse: BotMethodResponse): Promise<boolean> {
     return Boolean(
@@ -93,7 +88,7 @@ export class BotControls {
   ): Promise<BotMethodResponse['controls']> {
     return {
       [BotControlsType.Input]: (botMethodResponse: BotMethodResponse) =>
-        Promise.resolve(prompt(botMethodResponse.output, defaultValue)),
+        Promise.resolve(prompt(botMethodResponse.output, defaultValue) || ''),
     };
   }
   async isRadiogroup(botMethodResponse: BotMethodResponse): Promise<boolean> {
@@ -115,7 +110,7 @@ export class BotControls {
           prompt(
             `${botMethodResponse.output} (${options.keys.join(', ')})`,
             defaultValue
-          )
+          ) || ''
         ),
     };
   }
@@ -123,7 +118,6 @@ export class BotControls {
 
 export class BotCommandRunner<T> {
   constructor(
-    private readonly state: BotState<T>,
     private readonly command: T,
     private readonly botControls: BotControls
   ) {}
@@ -142,14 +136,14 @@ export class BotCommandRunner<T> {
       ]();
 
       const flow = async (
-        botMethodResponse: BotMethodResponse,
+        botMethodResponse: BotMethodResponse | undefined,
         promptResult: string
       ) => {
         if (promptResult !== BOT_RESULT_BACK) {
           botMethodResponse = await this.command[commandName](promptResult);
           const gotoIndex = getNextCommandIndexByRequest(
             this.command,
-            botMethodResponse.nextCommand
+            botMethodResponse?.nextCommand || ''
           );
           if (gotoIndex !== -1) {
             i = gotoIndex;
@@ -176,9 +170,11 @@ export class BotCommandRunner<T> {
         ) {
           if (
             !exit &&
+            botMethodResponse &&
+            botMethodResponse.controls &&
             botMethodResponse.output !== undefined &&
             this.botControls[`is${controlName}`] &&
-            await this.botControls[`is${controlName}`](botMethodResponse)
+            (await this.botControls[`is${controlName}`](botMethodResponse))
           ) {
             const promptResult = await botMethodResponse.controls[controlName](
               botMethodResponse
