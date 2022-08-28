@@ -60,15 +60,20 @@ export enum BotControlsType {
   'Alert' = 'Alert',
 }
 
+export interface BotControlProvider {
+  isAlert(botMethodResponse: BotMethodResponse): boolean;
+  createAlert(): BotMethodResponse['controls'];
+}
+
 export class BotControls {
-  isAlert(botMethodResponse: BotMethodResponse): boolean {
+  async isAlert(botMethodResponse: BotMethodResponse): Promise<boolean> {
     return Boolean(
       Object.keys(botMethodResponse.controls || {}).find(
         (key) => key === BotControlsType.Alert
       )
     );
   }
-  createAlert(): BotMethodResponse['controls'] {
+  async createAlert(): Promise<BotMethodResponse['controls']> {
     return {
       [BotControlsType.Alert]: (botMethodResponse: BotMethodResponse) => {
         alert(botMethodResponse.output);
@@ -76,32 +81,34 @@ export class BotControls {
       },
     };
   }
-  isInput(botMethodResponse: BotMethodResponse): boolean {
+  async isInput(botMethodResponse: BotMethodResponse): Promise<boolean> {
     return Boolean(
       Object.keys(botMethodResponse.controls || {}).find(
         (key) => key === BotControlsType.Input
       )
     );
   }
-  createInput(defaultValue: string): BotMethodResponse['controls'] {
+  async createInput(
+    defaultValue: string
+  ): Promise<BotMethodResponse['controls']> {
     return {
       [BotControlsType.Input]: (botMethodResponse: BotMethodResponse) =>
         Promise.resolve(prompt(botMethodResponse.output, defaultValue)),
     };
   }
-  isRadiogroup(botMethodResponse: BotMethodResponse): boolean {
+  async isRadiogroup(botMethodResponse: BotMethodResponse): Promise<boolean> {
     return Boolean(
       Object.keys(botMethodResponse.controls || {}).find(
         (key) => key === BotControlsType.Radiogroup
       )
     );
   }
-  createRadiogroup(
+  async createRadiogroup(
     defaultValue: string,
     options: {
       keys: string[];
     }
-  ): BotMethodResponse['controls'] {
+  ): Promise<BotMethodResponse['controls']> {
     return {
       [BotControlsType.Radiogroup]: (botMethodResponse: BotMethodResponse) =>
         Promise.resolve(
@@ -171,7 +178,7 @@ export class BotCommandRunner<T> {
             !exit &&
             botMethodResponse.output !== undefined &&
             this.botControls[`is${controlName}`] &&
-            this.botControls[`is${controlName}`](botMethodResponse)
+            await this.botControls[`is${controlName}`](botMethodResponse)
           ) {
             const promptResult = await botMethodResponse.controls[controlName](
               botMethodResponse

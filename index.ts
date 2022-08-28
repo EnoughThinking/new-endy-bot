@@ -26,7 +26,7 @@ class FirstMeetingCommand {
     if (!botMethodRequest) {
       return {
         output: 'Tell me you name',
-        controls: this.controls.createInput(
+        controls: await this.controls.createInput(
           await this.state.getState('askFirstname', '')
         ),
       };
@@ -44,7 +44,7 @@ class FirstMeetingCommand {
     if (!botMethodRequest) {
       return {
         output: `Tell me you last name ("${BOT_RESULT_BACK}" - move to back)`,
-        controls: this.controls.createInput(
+        controls: await this.controls.createInput(
           await this.state.getState('askLastname', '')
         ),
       };
@@ -60,13 +60,13 @@ class FirstMeetingCommand {
       return {
         output: `Tell me you gender ("${BOT_RESULT_BACK}" - move to back)`,
         controls: {
-          ...this.controls.createRadiogroup(
+          ...(await this.controls.createRadiogroup(
             await this.state.getState('askGender', ''),
             { keys: Object.keys(FirstMeetingGenderType) }
-          ),
-          ...this.controls.createInput(
+          )),
+          ...(await this.controls.createInput(
             await this.state.getState('askGender', '')
-          ),
+          )),
         },
       };
     }
@@ -89,7 +89,7 @@ class FirstMeetingCommand {
           'askFirstname',
           'unknown'
         )} ${await this.state.getState('askLastname', 'unknown')}`,
-        controls: this.controls.createAlert(),
+        controls: await this.controls.createAlert(),
       };
     }
     return {};
