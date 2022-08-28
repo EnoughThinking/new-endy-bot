@@ -20,28 +20,32 @@ class FirstMeetingCommand {
     private readonly controls: BotControls
   ) {}
 
-  public askFirstname(botMethodRequest?: BotMethodRequest): BotMethodResponse {
+  public async askFirstname(
+    botMethodRequest?: BotMethodRequest
+  ): Promise<BotMethodResponse> {
     if (!botMethodRequest) {
       return {
         output: 'Tell me you name',
         controls: this.controls.createInput(
-          this.state.getState('askFirstname', '')
+          await this.state.getState('askFirstname', '')
         ),
       };
     }
-    this.state.setState('askFirstname', botMethodRequest);
+    await this.state.setState('askFirstname', botMethodRequest);
     return {
       output: `Hello ${botMethodRequest}`,
       // nextCommand: createNextCommand(this, 'askGender'),
     };
   }
 
-  public askLastname(botMethodRequest?: BotMethodRequest): BotMethodResponse {
+  public async askLastname(
+    botMethodRequest?: BotMethodRequest
+  ): Promise<BotMethodResponse> {
     if (!botMethodRequest) {
       return {
         output: `Tell me you last name ("${BOT_RESULT_BACK}" - move to back)`,
         controls: this.controls.createInput(
-          this.state.getState('askLastname', '')
+          await this.state.getState('askLastname', '')
         ),
       };
     }
@@ -49,36 +53,42 @@ class FirstMeetingCommand {
     return {};
   }
 
-  public askGender(botMethodRequest?: BotMethodRequest): BotMethodResponse {
+  public async askGender(
+    botMethodRequest?: BotMethodRequest
+  ): Promise<BotMethodResponse> {
     if (!botMethodRequest) {
       return {
         output: `Tell me you gender ("${BOT_RESULT_BACK}" - move to back)`,
         controls: {
           ...this.controls.createRadiogroup(
-            this.state.getState('askGender', ''),
+            await this.state.getState('askGender', ''),
             { keys: Object.keys(FirstMeetingGenderType) }
           ),
-          ...this.controls.createInput(this.state.getState('askGender', '')),
+          ...this.controls.createInput(
+            await this.state.getState('askGender', '')
+          ),
         },
       };
     }
-    this.state.setState('askGender', botMethodRequest);
+    await this.state.setState('askGender', botMethodRequest);
     return {};
   }
 
-  public endMeeting(botMethodRequest?: BotMethodRequest): BotMethodResponse {
+  public async endMeeting(
+    botMethodRequest?: BotMethodRequest
+  ): Promise<BotMethodResponse> {
     if (!botMethodRequest) {
-      this.state.setState('endMeeting', BOT_RESULT_OK);
+      await this.state.setState('endMeeting', BOT_RESULT_OK);
       return {
         output: `Hello ${
-          this.state.getState('askGender', 'Sir') ===
+          (await this.state.getState('askGender', 'Sir')) ===
           FirstMeetingGenderType.Female
             ? 'Madam'
             : 'Sir'
-        }. ${this.state.getState(
+        }. ${await this.state.getState(
           'askFirstname',
           'unknown'
-        )} ${this.state.getState('askLastname', 'unknown')}`,
+        )} ${await this.state.getState('askLastname', 'unknown')}`,
         controls: this.controls.createAlert(),
       };
     }

@@ -42,14 +42,14 @@ export function getNextCommandIndexByRequest<T>(command: T, request: string) {
 export class BotState<T> {
   private state: Partial<Record<keyof T, string>> = {};
 
-  public getState(commandName: keyof T, defaultValue: string) {
+  public async getState(commandName: keyof T, defaultValue: string) {
     return (
       Object.getOwnPropertyDescriptor(this.state, commandName)?.value ||
       defaultValue
     );
   }
 
-  public setState(commandName: keyof T, value: string) {
+  public async setState(commandName: keyof T, value: string) {
     this.state[commandName] = value;
   }
 }
@@ -130,14 +130,16 @@ export class BotCommandRunner<T> {
         return;
       }
       let exit = false;
-      let botMethodResponse: BotMethodResponse = this.command[commandName]();
+      let botMethodResponse: BotMethodResponse = await this.command[
+        commandName
+      ]();
 
-      const flow = (
+      const flow = async (
         botMethodResponse: BotMethodResponse,
         promptResult: string
       ) => {
         if (promptResult !== BOT_RESULT_BACK) {
-          botMethodResponse = this.command[commandName](promptResult);
+          botMethodResponse = await this.command[commandName](promptResult);
           const gotoIndex = getNextCommandIndexByRequest(
             this.command,
             botMethodResponse.nextCommand
@@ -174,7 +176,7 @@ export class BotCommandRunner<T> {
             const promptResult = await botMethodResponse.controls[controlName](
               botMethodResponse
             );
-            flow(botMethodResponse, promptResult);
+            await flow(botMethodResponse, promptResult);
             exit = true;
           }
         }
